@@ -74,20 +74,26 @@ export const SettingsForm = ({
           <Label htmlFor="topics">Topics (comma-separated)</Label>
           <Input
             id="topics"
-            placeholder="math, science, history"
+            placeholder="science, history, math"
             value={topics}
             onChange={(e) => setTopics(e.target.value)}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="question-types">Question Types (comma-separated)</Label>
-          <Input
-            id="question-types"
-            placeholder="multiple-choice, true-false"
-            value={questionTypes}
-            onChange={(e) => setQuestionTypes(e.target.value)}
-          />
+          <Label htmlFor="question-types">Question Types</Label>
+          <Select value={questionTypes} onValueChange={setQuestionTypes}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select question types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+              <SelectItem value="true_false">True/False</SelectItem>
+              <SelectItem value="fill_in_blank">Fill in the Blank</SelectItem>
+              <SelectItem value="multiple_choice,true_false">Multiple Choice & True/False</SelectItem>
+              <SelectItem value="multiple_choice,true_false,fill_in_blank">All Types</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center space-x-2">

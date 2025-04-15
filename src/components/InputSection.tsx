@@ -10,15 +10,19 @@ import { useToast } from "@/hooks/use-toast"
 interface InputSectionProps {
   value: string
   onChange: (value: string) => void
+  onFileUpload: (file: File | null) => void
 }
 
-export const InputSection = ({ value, onChange }: InputSectionProps) => {
+export const InputSection = ({ value, onChange, onFileUpload }: InputSectionProps) => {
   const [fileName, setFileName] = useState<string>("")
   const { toast } = useToast()
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      onFileUpload(null);
+      return;
+    }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       toast({
@@ -26,13 +30,15 @@ export const InputSection = ({ value, onChange }: InputSectionProps) => {
         description: "Please upload a file smaller than 5MB",
         variant: "destructive",
       })
-      return
+      return;
     }
 
     try {
-      const text = await file.text()
-      onChange(text)
-      setFileName(file.name)
+      const text = await file.text();
+      onChange(text);
+      setFileName(file.name);
+      onFileUpload(file);
+      
       toast({
         title: "File uploaded successfully",
         description: `${file.name} has been loaded`,
@@ -43,6 +49,7 @@ export const InputSection = ({ value, onChange }: InputSectionProps) => {
         description: "Please try again with a different file",
         variant: "destructive",
       })
+      onFileUpload(null);
     }
   }
 

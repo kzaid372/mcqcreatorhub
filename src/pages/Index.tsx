@@ -4,52 +4,168 @@ import { InputSection } from "@/components/InputSection"
 import { OutputSection } from "@/components/OutputSection"
 import { ActionButton } from "@/components/ActionButton"
 import { SettingsForm } from "@/components/SettingsForm"
+import { useToast } from "@/hooks/use-toast"
 
 const Index = () => {
   const [context, setContext] = useState("")
   const [generatedJson, setGeneratedJson] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const { toast } = useToast()
   
-  // New state for settings
+  // Settings state aligned with API parameters
   const [numQuestions, setNumQuestions] = useState(5)
   const [difficulty, setDifficulty] = useState("medium")
-  const [topics, setTopics] = useState("")
-  const [questionTypes, setQuestionTypes] = useState("multiple-choice")
+  const [topics, setTopics] = useState("science,space")
+  const [questionTypes, setQuestionTypes] = useState("multiple_choice")
   const [useLLM, setUseLLM] = useState(true)
 
-  // Temporary mock generation for frontend demo
-  const generateQuestions = () => {
+  // Function to handle document upload
+  const handleFileUpload = (file: File | null) => {
+    setUploadedFile(file)
+  }
+
+  // Generate questions from API
+  const generateQuestions = async () => {
     setIsLoading(true)
-    // Simulate API call with all parameters
-    setTimeout(() => {
-      const mockJson = JSON.stringify({
-        metadata: {
+    
+    try {
+      let response;
+      const baseUrl = "http://localhost:8000"; // This should be configured for your environment
+      
+      // Different request handling for text input vs file upload
+      if (uploadedFile) {
+        // File upload approach
+        const formData = new FormData();
+        formData.append('document', uploadedFile);
+        formData.append('numQuestions', numQuestions.toString());
+        formData.append('difficulty', difficulty);
+        formData.append('topics', topics);
+        formData.append('questionTypes', questionTypes);
+        formData.append('useLLM', useLLM.toString());
+        
+        // Mock API call for now - would be replaced with actual fetch
+        setTimeout(() => {
+          mockResponse();
+        }, 1500);
+        
+        // Actual API call would be:
+        // response = await fetch(`${baseUrl}/api/generate-mcqs`, {
+        //   method: 'POST',
+        //   body: formData
+        // });
+      } else if (context.trim()) {
+        // Text input approach
+        const payload = {
+          context,
           numQuestions,
           difficulty,
-          topics: topics.split(",").map(t => t.trim()),
-          questionTypes: questionTypes.split(",").map(t => t.trim()),
+          topics,
+          questionTypes,
           useLLM
+        };
+        
+        // Mock API call for now - would be replaced with actual fetch
+        setTimeout(() => {
+          mockResponse();
+        }, 1500);
+        
+        // Actual API call would be:
+        // response = await fetch(`${baseUrl}/api/generate-mcqs`, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json'
+        //   },
+        //   body: JSON.stringify(payload)
+        // });
+      } else {
+        toast({
+          title: "Error",
+          description: "Please provide either text or upload a document",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Handle successful response from API
+      // const data = await response.json();
+      // setGeneratedJson(JSON.stringify(data, null, 2));
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate questions. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  }
+  
+  // Mock response function - would be replaced with actual API calls
+  const mockResponse = () => {
+    const mockJson = JSON.stringify({
+      metadata: {
+        numQuestions,
+        difficulty,
+        topics: topics.split(",").map(t => t.trim()),
+        questionTypes: questionTypes.split(",").map(t => t.trim()),
+        useLLM
+      },
+      questions: [
+        {
+          id: "q1",
+          question: "Which planet is known as the Red Planet?",
+          type: "multiple_choice",
+          options: ["Earth", "Mars", "Venus", "Jupiter"],
+          correctAnswer: "Mars",
+          difficulty: "easy",
+          topic: "space"
         },
-        questions: [
-          {
-            question: "What is the main topic of the given context?",
-            options: ["Option A", "Option B", "Option C", "Option D"],
-            correctAnswer: "Option A",
-            difficulty: "medium",
-            topic: topics.split(",")[0] || "general"
-          },
-          {
-            question: "Which key concept is mentioned in the text?",
-            options: ["Concept 1", "Concept 2", "Concept 3", "Concept 4"],
-            correctAnswer: "Concept 2",
-            difficulty: "medium",
-            topic: topics.split(",")[0] || "general"
-          }
-        ]
-      }, null, 2)
-      setGeneratedJson(mockJson)
-      setIsLoading(false)
-    }, 1500)
+        {
+          id: "q2",
+          question: "The solar system has eight planets.",
+          type: "true_false",
+          correctAnswer: true,
+          difficulty: "easy",
+          topic: "space"
+        },
+        {
+          id: "q3",
+          question: "The four inner planets are relatively small and ______.",
+          type: "fill_in_blank",
+          correctAnswer: "rocky",
+          difficulty: "medium",
+          topic: "space"
+        },
+        {
+          id: "q4",
+          question: "Which planet is the only one known to support life?",
+          type: "multiple_choice",
+          options: ["Mars", "Venus", "Earth", "Jupiter"],
+          correctAnswer: "Earth",
+          difficulty: "easy",
+          topic: "space"
+        },
+        {
+          id: "q5",
+          question: "What is the central body in our solar system?",
+          type: "multiple_choice",
+          options: ["Earth", "Moon", "Sun", "Milky Way"],
+          correctAnswer: "Sun",
+          difficulty: "easy",
+          topic: "space"
+        }
+      ]
+    }, null, 2);
+    
+    setGeneratedJson(mockJson);
+    setIsLoading(false);
+    
+    toast({
+      title: "Success!",
+      description: "Generated 5 questions based on your input",
+    });
   }
 
   return (
@@ -65,7 +181,11 @@ const Index = () => {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <InputSection value={context} onChange={setContext} />
+          <InputSection 
+            value={context} 
+            onChange={setContext} 
+            onFileUpload={handleFileUpload}
+          />
           <SettingsForm
             numQuestions={numQuestions}
             setNumQuestions={setNumQuestions}
@@ -84,7 +204,7 @@ const Index = () => {
           <ActionButton
             onClick={generateQuestions}
             isLoading={isLoading}
-            disabled={!context.trim()}
+            disabled={(!context.trim() && !uploadedFile)}
           />
         </div>
 

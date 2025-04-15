@@ -41,7 +41,7 @@ const Index = () => {
             MCQ Question Generator
           </h1>
           <p className="text-gray-600">
-            Enter your context below and generate multiple choice questions in JSON format
+            Upload a document or enter text to generate multiple choice questions
           </p>
         </div>
 
